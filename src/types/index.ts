@@ -20,7 +20,6 @@ declare global {
       ): Response;
     }
     export interface Request {
-      user?: { id: number; email: string };
       loggedInAccount: IUser | IAdmin;
     }
   }

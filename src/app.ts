@@ -15,8 +15,8 @@ const app = express();
 const server = createServer(app); // Wrap Express in an HTTP server
 
 const whitelist = [
-  "http://localhost:3000",
-  // "https://sodgygsfrontend.vercel.app",
+  "http://localhost:3002",
+  "https://crownlist-staging.vercel.app",
 ];
 
 // Middlewares

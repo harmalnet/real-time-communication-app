@@ -11,6 +11,8 @@ import transactionRouter from "./transaction.route";
 import notificationRouter from "./notification.route";
 import contactRouter from "./contactus.route";
 import locationRouter from "./location.route";
+import categoryRouter from "./category.route";
+import subCategoryRouter from "./subCategory.route";
 
 const router = express.Router();
 
@@ -25,6 +27,8 @@ router.use("/transactions", transactionRouter);
 router.use("/notifications", notificationRouter);
 router.use("/contactus", contactRouter);
 router.use("/locations", locationRouter);
+router.use("/categories", categoryRouter);
+router.use("/subcategories", subCategoryRouter);
 
 router.use("/", sharedRouter);
 

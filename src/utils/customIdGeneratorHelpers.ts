@@ -2,6 +2,9 @@ import User from "../db/models/user.model";
 import Admin from "../db/models/admin.model";
 
 import { BadRequest } from "../errors/httpErrors";
+import CategoryModel from "../db/models/category.model";
+import slugify from "slugify";
+import SubCategoryModel from "../db/models/subCategory.model";
 
 class GeneratorService {
   async generateUserCustomId(): Promise<string> {
@@ -56,6 +59,30 @@ class GeneratorService {
     } catch (error: any) {
       throw new BadRequest(error.message, "INVALID_REQUEST_PARAMETERS");
     }
+  }
+
+  async generateUniqueSlug(payload: string, model: string): Promise<string> {
+    let slug = `${slugify(payload.toLowerCase())}`;
+    let count = 0;
+    let existingSlug;
+    do {
+      if (count > 0) {
+        slug = `${slugify(payload.toLowerCase())}-${count}`;
+      }
+
+      if (model === "Category") {
+        // Check if the generated slug already exists in the database
+        existingSlug = await CategoryModel.findOne({ slug });
+      }
+      if (model === "SubCategory") {
+        // Check if the generated slug already exists in the database
+        existingSlug = await SubCategoryModel.findOne({ slug });
+      }
+
+      count++;
+    } while (existingSlug);
+
+    return slug;
   }
 }
 export default new GeneratorService();
