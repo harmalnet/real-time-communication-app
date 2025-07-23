@@ -41,7 +41,7 @@ class AuthController {
     const { error, data } = validators.createUserValidator(req.body);
     if (error) throw new BadRequest(error.message, error.code);
 
-    const { fullName, email, password } = data;
+    const { fullName, email, password,accountType } = data;
 
     const emailExists = await User.findOne({ email });
     if (emailExists) {
@@ -51,7 +51,6 @@ class AuthController {
         "EXISTING_USER_EMAIL"
       );
     }
-    const accountType = "User";
     const hash = await bcrypt.hash(password, 10);
 
     // Generate custom user ID

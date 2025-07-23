@@ -20,6 +20,9 @@ export const createUserValidator = (payload: any) => {
         required_error: "Password is required.",
       })
       .min(8, "Password must be minimum of 8 characters."),
+    accountType: z.enum(["User", "Seller"], {
+      required_error: "Account Type is required.",
+    }),
   });
 
   return validateRequestBody(schema, payload);
