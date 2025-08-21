@@ -3,7 +3,7 @@ import { NextFunction, Request, Response } from "express";
 import { HttpError } from "../../errors/httpErrors";
 
 export function errorLogger(
-  err: any,
+  err: Error,
   req: Request,
   res: Response,
   next: NextFunction,
@@ -13,10 +13,9 @@ export function errorLogger(
 }
 
 export function errorHandler(
-  err: any,
+  err: Error,
   req: Request,
   res: Response,
-  next: NextFunction,
 ) {
   const isInvalidJSON =
     err instanceof SyntaxError &&

@@ -1,12 +1,6 @@
 import { createClient } from "redis";
 import { Server } from "socket.io";
-import chatController from "../api/v1/controllers/chat.controller";
-import {
-  INotification,
-  NotificationType,
-} from "../db/models/notification.model";
-import { sanitizeParticipants } from "../utils/chatHelper";
-import notificationController from "../api/v1/controllers/notification.controller";
+import { chatMessageValidator } from "../validators/redis.validator";
 
 // Create Redis clients
 const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
@@ -71,29 +65,6 @@ const getUserSocket = async (userId: string): Promise<string | null> => {
   }
 };
 
-// get batch of user socket IDs from Redis
-const getBatchUserSockets = async (
-  userIdsStr: string // this should be a JSON stringified array of participants
-): Promise<Record<string, string | null>> => {
-  const rawArray = JSON.parse(userIdsStr); // parse back to array
-  const participants = sanitizeParticipants(rawArray);
-  const socketIds = await Promise.all(
-    participants.map((user) => {
-      const userId = user._id;
-      if (!userId) return Promise.resolve(null);
-      return redisClient.get(`socket:${userId}`);
-    })
-  );
-
-  const result: Record<string, string | null> = {};
-  participants.forEach((user, index) => {
-    if (user._id) result[user._id] = socketIds[index];
-  });
-
-  console.debug("✅ Retrieved batch of socket IDs for users", result);
-  return result;
-};
-
 // Remove user socket ID from Redis
 const removeUserSocket = async (userId: string): Promise<void> => {
   try {
@@ -105,70 +76,6 @@ const removeUserSocket = async (userId: string): Promise<void> => {
   }
 };
 
-// Publish notification
-const publishNotification = async ({
-  userId,
-  title,
-  content,
-  notificationType,
-}: INotification): Promise<void> => {
-  try {
-    await pubClient.publish(
-      "notifications",
-      JSON.stringify({
-        userId,
-        content,
-        title,
-        notificationType,
-      })
-    );
-    console.debug(`✅ Published notification for user ${userId}`);
-  } catch (error) {
-    console.error(
-      `❌ Failed to publish notification for user ${userId}:`,
-      error
-    );
-    throw error;
-  }
-};
-
-// Subscribe to notifications
-const subscribeToNotifications = (io: Server): void => {
-  subClient.subscribe("notifications", async (message: string) => {
-    try {
-      const { userId, title, content, notificationType } = JSON.parse(message);
-
-      // Fetch the socket ID for the user
-      const socketId = await getUserSocket(userId);
-
-      if (socketId) {
-        io.to(socketId).emit("notification", {
-          recipientId: userId,
-          title,
-          notificationType: notificationType,
-          createdAt: new Date(),
-          content,
-          isRead: false,
-        });
-        await notificationController.createNotification(message);
-        console.debug(`✅ Sent notification to user ${userId}`);
-      } else {
-        await notificationController.createNotification(message);
-        console.warn(`⚠️ No active socket found for user ${userId}`);
-      }
-    } catch (error) {
-      console.error("❌ Error processing notification:", error);
-    }
-  });
-
-  // Handle subscription errors
-  subClient.on("message", (channel, message) => {
-    if (channel === "notifications") {
-      console.debug(`Received message on channel "${channel}":`, message);
-    }
-  });
-};
-
 const publishChatMessage = async (
   senderId: string,
   recipientId: string,
@@ -177,17 +84,25 @@ const publishChatMessage = async (
   chat_id?: string // Optional chat ID for future use
 ): Promise<void> => {
   try {
+    const messageData = {
+      senderId,
+      recipientId,
+      content: message,
+      chat_id, // Include chat ID if available
+      senderName,
+      isRead: false,
+      createdAt: new Date(),
+    };
+
+    // Validate message data before publishing
+    const validation = chatMessageValidator(messageData);
+    if (validation.error) {
+      throw new Error(`Invalid message data: ${validation.error.message}`);
+    }
+
     await pubClient.publish(
       "chat", // Use a dedicated Redis channel for chat
-      JSON.stringify({
-        senderId,
-        recipientId,
-        content: message,
-        chat_id, // Include chat ID if available
-        senderName,
-        isRead: false,
-        createdAt: new Date(),
-      })
+      JSON.stringify(validation.data)
     );
     console.debug(
       `✅ Published chat message from ${senderId} to ${recipientId}`
@@ -204,27 +119,28 @@ const publishChatMessage = async (
 const subscribeToChatMessages = (io: Server): void => {
   subClient.subscribe("chat", async (data: string) => {
     try {
+      const parsedData = JSON.parse(data);
+      
+      // Validate incoming message data
+      const validation = chatMessageValidator(parsedData);
+      if (validation.error) {
+        console.error("❌ Invalid chat message format:", validation.error.message);
+        return;
+      }
+
       const {
         senderId,
         recipientId,
         content,
         isRead,
         createdAt,
-        chat_id,
-        senderName,
-      } = JSON.parse(data);
+      } = validation.data;
+
       // Fetch the socket ID of the recipient
       const senderSocketId = await getUserSocket(senderId);
       const recipientSocketId = await getUserSocket(recipientId);
-      const message = {
-        userId: recipientId,
-        title: "New Message Received from " + senderName,
-        notificationType: NotificationType.NEW_MESSAGE.toString(),
-        content: content,
-        chat_id,
-        isRead: false,
-        createdAt: new Date(),
-      };
+      
+      // Minimal message payload for client updates
       if (senderSocketId) {
         io.to(senderSocketId).emit("updateChatList", {
           user: recipientId,
@@ -254,13 +170,6 @@ const subscribeToChatMessages = (io: Server): void => {
           createdAt,
         });
 
-        io.to(recipientSocketId).emit("notification", message);
-        // await publishNotification({
-        //   userId: recipientId,
-        //   title: "New Message",
-        //   content,
-        //   notificationType: NotificationType.NEW_MESSAGE,
-        // });
         console.debug(
           `✅ Sent chat message from ${senderId} to ${recipientId}`
         );
@@ -269,8 +178,7 @@ const subscribeToChatMessages = (io: Server): void => {
           `⚠️ Recipient ${recipientId} is offline. Message not delivered.`
         );
       }
-      await chatController.sendMessage(senderId, recipientId, content);
-      await notificationController.createNotification(JSON.stringify(message));
+      // Persistence is handled elsewhere (SQL models in socket handlers)
     } catch (error) {
       console.error("❌ Error processing chat message:", error);
     }
@@ -290,10 +198,8 @@ export {
   disconnectRedis,
   setUserSocket,
   getUserSocket,
-  getBatchUserSockets,
   removeUserSocket,
   publishChatMessage,
   subscribeToChatMessages,
-  publishNotification,
-  subscribeToNotifications,
+  redisClient,
 };

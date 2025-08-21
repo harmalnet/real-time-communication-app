@@ -4,8 +4,8 @@ import { HttpErrorCode } from "../../errors/httpErrors";
 
 export default function (req: Request, res: Response, next: NextFunction) {
   // attach custom response functions
-  res.ok = (payload: any, meta?: any) => customOkHelper(payload, res, meta);
-  res.created = (payload: any) => customCreatedHelper(payload, res);
+  res.ok = (payload: unknown, meta?: unknown) => customOkHelper(payload, res, meta);
+  res.created = (payload: unknown) => customCreatedHelper(payload, res);
   res.noContent = () => customNoContentHelper(res);
   res.error = (statusCode: number, message: string, errorCode: HttpErrorCode) =>
     customErrorHelper(res, statusCode, message, errorCode);
@@ -13,11 +13,11 @@ export default function (req: Request, res: Response, next: NextFunction) {
   next();
 }
 
-function customOkHelper(payload: any, res: Response, meta?: any) {
+function customOkHelper(payload: unknown, res: Response, meta?: unknown) {
   return res.status(200).json({ status: "success", data: payload, meta });
 }
 
-function customCreatedHelper(payload: any, res: Response) {
+function customCreatedHelper(payload: unknown, res: Response) {
   return res.status(201).json({ data: payload, status: "success" });
 }
 

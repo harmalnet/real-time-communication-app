@@ -1,9 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 import server from "./app";
-import connectDB from "./db";
-import "./env";
-import { startJobs } from "./config/agenda.config";
+import { initMySQL } from "./db";
 import { initSocket } from "./config/socket.config";
 import { connectRedis, disconnectRedis } from "./config/redis.config";
 
@@ -18,7 +16,7 @@ process.on("unhandledRejection", (err) => {
 
 // Graceful shutdown
 process.on("SIGINT", async () => {
-  console.log("Shutting down...");
+  console.log("Shutting down real-time-communication-app...");
   await disconnectRedis(); // Disconnect Redis
   server.close(); // Close the HTTP server
   process.exit(0);
@@ -33,17 +31,13 @@ connectRedis()
     // Initialize WebSocket after Redis is connected
     initSocket(server);
 
-    // Connect to MongoDB
-    await connectDB();
-    console.log("Successfully connected to MongoDB");
-
-    // Start Agenda jobs
-    await startJobs();
-    console.log("Agenda started successfully");
+    // Connect to MySQL (Sequelize)
+    await initMySQL();
+    console.log("✅ MySQL connected (Sequelize)");
 
     // Start the HTTP server
     server.listen(port, () => {
-      console.log(`🚀 Server running on port ${port}`);
+      console.log(`🚀 real-time-communication-app running on port ${port}`);
     });
   })
   .catch((error) => {

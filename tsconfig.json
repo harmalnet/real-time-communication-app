@@ -105,5 +105,23 @@
     /* Completeness */
     // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
     "skipLibCheck": true /* Skip type checking all .d.ts files. */
-  }
+  },
+  "include": [
+    "src/server.ts",
+    "src/app.ts",
+    "src/env.ts",
+    "src/config/socket.config.ts",
+    "src/config/redis.config.ts",
+    "src/api/middlewares/sqlAuth.ts",
+    "src/api/middlewares/errorMiddlewares.ts",
+    "src/api/middlewares/responseUtilities.ts",
+    "src/api/v1/routes/index.ts",
+    "src/api/v1/routes/room.route.ts",
+    "src/api/v1/controllers/room.controller.ts",
+    "src/db/sequelize.ts",
+    "src/db/models/**/*.ts",
+    "src/errors/httpErrors.ts",
+    "src/types/express.d.ts"
+  ],
+  "exclude": ["node_modules", "dist"]
 }

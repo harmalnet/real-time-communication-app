@@ -1,0 +1,29 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-namespace */
+import { z } from "zod";
+
+import { HttpErrorCode } from "../errors/httpErrors";
+import { envSchema } from "../env";
+import { UserAttributes } from "../db/models/user.model";
+
+declare global {
+  namespace Express {
+    export interface Response {
+      ok(payload: any, meta?: any): Response;
+      created(payload: any): Response;
+      noContent(): Response;
+      error(
+        statusCode: number,
+        message: string,
+        errorCode: HttpErrorCode
+      ): Response;
+    }
+    export interface Request {
+      loggedInAccount: UserAttributes;
+    }
+  }
+
+  namespace NodeJS {
+    interface ProcessEnv extends z.infer<typeof envSchema> {}
+  }
+}

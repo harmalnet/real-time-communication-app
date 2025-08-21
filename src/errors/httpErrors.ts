@@ -5,35 +5,22 @@ export type ResourceNotFoundErrorCode =
 export type BadRequestErrorCode =
   | "INVALID_REQUEST_PARAMETERS"
   | "MISSING_REQUIRED_FIELD"
-  | "INVALID_JSON_FORMAT"
-  | "EMAIL_ALREADY_VERIFIED"
-  | "EMAIL_NOT_VERIFIED"
-  | "EMAIL_TOKEN_EXPIRED";
+  | "INVALID_JSON_FORMAT";
 
 export type UnauthorizedErrorCode =
-  | "EXPIRED_TOKEN"
   | "MISSING_AUTH_HEADER"
-  | "MALFORMED_TOKEN"
   | "INVALID_TOKEN"
   | "INVALID_PASSWORD";
 
 export type ForbiddenErrorCode =
-  | "ACCESS_DENIED"
-  | "INSUFFICIENT_PERMISSIONS"
-  | "USER_NOT_VERIFIED"
-  | "RAFFLE_DRAW_CLOSED"
-  | "TEAM_NOT_VERIFIED";
+  | "ACCESS_DENIED";
 
 export type ServerErrorCode =
   | "UNEXPECTED_ERROR"
-  | "DATABASE_ERROR"
-  | "THIRD_PARTY_API_FAILURE";
+  | "RATE_LIMIT_EXCEEDED";
 
 export type ConflictErrorCode =
-  | "EXISTING_USER_EMAIL"
-  | "TEAM_ALREADY_VERIFIED"
-  | "SLUG_UNAVAILABLE"
-  | "WALLET_ALREADY_EXISTS";
+  | "EXISTING_USER_EMAIL";
 
 export type HttpErrorCode =
   | ResourceNotFoundErrorCode
