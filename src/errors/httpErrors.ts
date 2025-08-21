@@ -1,26 +1,41 @@
 export type ResourceNotFoundErrorCode =
   | "RESOURCE_NOT_FOUND"
-  | "UNKNOWN_ENDPOINT";
+  | "UNKNOWN_ENDPOINT"
+  | "USER_NOT_FOUND"
+  | "ROOM_NOT_FOUND"
+  | "MESSAGE_NOT_FOUND";
 
 export type BadRequestErrorCode =
   | "INVALID_REQUEST_PARAMETERS"
   | "MISSING_REQUIRED_FIELD"
-  | "INVALID_JSON_FORMAT";
+  | "INVALID_JSON_FORMAT"
+  | "INVALID_PAGINATION_PARAMS"
+  | "INVALID_ROOM_OPERATION";
 
 export type UnauthorizedErrorCode =
   | "MISSING_AUTH_HEADER"
   | "INVALID_TOKEN"
-  | "INVALID_PASSWORD";
+  | "INVALID_PASSWORD"
+  | "TOKEN_EXPIRED"
+  | "USER_NOT_FOUND";
 
 export type ForbiddenErrorCode =
-  | "ACCESS_DENIED";
+  | "ACCESS_DENIED"
+  | "NOT_ROOM_MEMBER"
+  | "INSUFFICIENT_PERMISSIONS"
+  | "ROOM_ACCESS_DENIED";
 
 export type ServerErrorCode =
   | "UNEXPECTED_ERROR"
-  | "RATE_LIMIT_EXCEEDED";
+  | "RATE_LIMIT_EXCEEDED"
+  | "DATABASE_ERROR"
+  | "EXTERNAL_SERVICE_ERROR";
 
 export type ConflictErrorCode =
-  | "EXISTING_USER_EMAIL";
+  | "EXISTING_USER_EMAIL"
+  | "EXISTING_USERNAME"
+  | "DUPLICATE_RESOURCE"
+  | "ROOM_ALREADY_JOINED";
 
 export type HttpErrorCode =
   | ResourceNotFoundErrorCode
